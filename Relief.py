@@ -1,7 +1,5 @@
 
 import numpy as np
-import scipy as sp
-import math
 
 
 def isNaN(v):
@@ -33,7 +31,7 @@ def relief(S: np.ndarray, threshold, times):
     n = S.shape[1]  #num of features
 
     weights = np.zeros(n)
-    for i in range(times):
+    for _ in range(times):
         instance_index = np.random.randint(0, m)
         chosen = S[instance_index, :]
 
