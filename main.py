@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     data_array = data_one_hot.to_numpy()
     #u, s, vh = svd(data_array)
-    #chosen_features = relief(data_array, 1000000000, 3)
+    chosen_features = relief(data_one_hot, data_array, 8, 3)
     #scatter_matrix(data_one_hot)
     #gm = GaussianMixture()
     #gm.fit(data_one_hot)

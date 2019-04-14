@@ -1,4 +1,4 @@
-
+import pandas as pd
 import numpy as np
 
 
@@ -26,27 +26,27 @@ def euclidean_dist(u, v):
     return dist
 
 
-def relief(S: np.ndarray, threshold, times):
+def relief(df: pd.DataFrame, S: np.ndarray, threshold, times):
     m = S.shape[0]  #num of samples
     n = S.shape[1]  #num of features
 
     weights = np.zeros(n)
     for _ in range(times):
         instance_index = np.random.randint(0, m)
-        chosen = S[instance_index, :]
+        chosen = S[instance_index]
 
-        same = [instance for instance in S if instance is not chosen and instance[0] == chosen[0]]
-        same_dists = [euclidean_dist(chosen, instance) for instance in same]
-        different = [instance for instance in S if instance[0] != chosen[0]]
-        different_dists = [euclidean_dist(chosen, instance) for instance in different]
+        same = [(euclidean_dist(chosen, instance), instance) for i, instance in enumerate(S) if i != instance_index and
+                instance[0] == chosen[0]]
+        different = [(euclidean_dist(chosen, instance), instance) for instance in S if instance[0] != chosen[0]]
 
-        closest_same = same[np.argmin(same_dists)]
-        closest_different = different[np.argmin(different_dists)]
+        _, closest_same = min(same, key=lambda x: x[0])
+        _, closest_different = min(different, key=lambda x: x[0])
 
         for j in range(n):
             weights[j] += (minus(chosen[j], closest_different[j]))**2 - (minus(chosen[j], closest_same[j]))**2
 
-    chosen_features = [index for index in range(n) if weights[index] > threshold]
+    features = df.columns.values
+    chosen_features = [(index, features[index]) for index in range(n) if weights[index] > threshold]
     return chosen_features
 
 
