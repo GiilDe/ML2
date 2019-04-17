@@ -13,6 +13,8 @@ def count_bad_samples(df: pd.DataFrame):
     return bad
 
 
+
+
 if __name__ == '__main__':
     data = pd.read_csv('ElectionsData.csv')
     #pd.DataFrame.replace(data, 'Yes', 1, inplace=True)
