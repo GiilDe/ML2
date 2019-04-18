@@ -1,10 +1,9 @@
 import pandas as pd
-from pandas.plotting import scatter_matrix
 from FeatureSelection import relief, sfs
-from scipy.linalg import svd
 from pandas import DataFrame
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
+import matplotlib.pyplot as plt
 
 
 def get_binary_features(df: DataFrame):
@@ -25,8 +24,6 @@ def get_series_hist(series: pd.Series):
 
 
 def convert_binary(df: DataFrame):
-    #pd.DataFrame.replace(data, 'Yes', 1, inplace=True)
-    #pd.DataFrame.replace(data, 'No', 0, inplace=True)
     df['Will_vote_only_large_party'] = df['Will_vote_only_large_party'].map({'No': 0, 'Yes': 1, 'Maybe': 0.5})
     df['Gender'] = df['Gender'].map({'Female': 0, 'Male': 1})
     df['Married'] = df['Married'].map({'No': 0, 'Yes': 1})
@@ -77,14 +74,18 @@ def chosen_features(data: DataFrame):
     return chosen_features
 
 
+def plot_features_hists(data: DataFrame):
+    for i, column in enumerate(data):
+        name = str(i) + ' ' + column
+        data[column].plot(kind='hist')
+        plt.title(name)
+        plt.show()
+
+
 if __name__ == '__main__':
     data = pd.read_csv('ElectionsData.csv')
-    shape_initial = data.shape
-    names = data.columns.values
-    bad_samples = count_bad_samples(data)
-    binary_features = get_binary_features(data)
-    #data_filled = data.fillna(method='ffill')
     data_featues_one_hot = to_numerical_data(data)
-    shape_hot_vector = data_featues_one_hot.shape
-
+    data = data_featues_one_hot.fillna(method='ffill')
+    #chosen_features = chosen_features(data)
+    plot_features_hists(data)
 
