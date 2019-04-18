@@ -3,8 +3,15 @@ import numpy as np
 from sklearn import metrics
 from pandas import DataFrame
 
+
 def isNaN(v):
     return v != v
+
+
+#convert list to column vector
+def convert_to_2d(list):
+    vector = list.reshape(-1, 1)
+    return vector
 
 
 def minus(val1, val2):
@@ -43,22 +50,20 @@ def relief(df: pd.DataFrame, S: np.ndarray, threshold, times):
         _, closest_same = min(same, key=lambda x: x[0])
         _, closest_different = min(different, key=lambda x: x[0])
 
-        for j in range(n):
+        for j in range(1, n):
             weights[j] += (minus(chosen[j], closest_different[j]))**2 - (minus(chosen[j], closest_same[j]))**2
 
     features = df.columns.values
     chosen_features = [(index, features[index]) for index in range(n) if weights[index] > threshold]
-    return chosen_features
+    return set(chosen_features)
 
 
 def sfs(model, df: DataFrame, train_data: np.ndarray, test_data: np.ndarray, feature_num: int):
 
-    train_labels = train_data[:, 0]
-    train_labels = train_labels.reshape(len(train_labels), 1)
+    train_labels = convert_to_2d(train_data[:, 0])
     train_data = np.delete(train_data, 0, axis=1)
 
-    test_labels = test_data[:, 0]
-    test_labels = test_labels.reshape(len(test_labels), 1)
+    y = convert_to_2d(test_data[:, 0])
     test_data = np.delete(test_data, 0, axis=1)
 
     train = []
@@ -69,31 +74,40 @@ def sfs(model, df: DataFrame, train_data: np.ndarray, test_data: np.ndarray, fea
         accuracies = []
         i = 0
         for train_feature, test_feature in zip(train_data.transpose(), test_data.transpose()):
-            if i in added_features:
-                continue
 
-            train = np.append(train, train_feature, axis=1)
-            test = np.append(test, test_feature, axis=1)
-            if j == 0:
-                train = train.reshape(len(train), 1)
-                test = test.reshape(len(test), 1)
-            else:
+            train_feature = convert_to_2d(train_feature)
+            test_feature = convert_to_2d(test_feature)
 
+            if i not in added_features:
+                if j == 0:
+                    train = convert_to_2d(np.array(train_feature))
+                    test = convert_to_2d(np.array(test_feature))
+                else:
+                    train = np.append(train, train_feature, axis=1)
+                    test = np.append(test, test_feature, axis=1)
 
-            model.fit(train, train_labels)
-            y_hat = model.predict(test)
-            accuracies.append((i, metrics.accuracy_score(test_labels, y_hat)))
-            train = np.delete(train, axis=1, obj=train.shape[1]-1)
-            test = np.delete(test, axis=1, obj=test.shape[1]-1)
+                model.fit(train, train_labels)
+                y_hat = model.predict(test)
+                accuracies.append((i, metrics.accuracy_score(y, y_hat)))
+
+                train = np.delete(train, axis=1, obj=train.shape[1]-1)
+                test = np.delete(test, axis=1, obj=test.shape[1]-1)
             i += 1
 
         best_index, _ = max(accuracies, key=lambda x: x[1])
-        train = np.append(train, train_data[:, best_index], axis=1)
-        test = np.append(test, test_data[:, best_index], axis=1)
+
+        if j == 0:
+            train = convert_to_2d(np.array(train_data[:, best_index]))
+            test = convert_to_2d(np.array(test_data[:, best_index]))
+        else:
+            train_add = convert_to_2d(train_data[:, best_index])
+            test_add = convert_to_2d(test_data[:, best_index])
+            train = np.append(train, train_add, axis=1)
+            test = np.append(test, test_add, axis=1)
 
         added_features.add(best_index)
 
-
     names = df.columns.values
     chosen_features = [(index, names[index]) for index in added_features]
-    return chosen_features
+    return set(chosen_features)
+    #asfg
