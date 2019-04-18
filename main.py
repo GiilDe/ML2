@@ -1,6 +1,6 @@
 import pandas as pd
 from pandas.plotting import scatter_matrix
-# from FeatureSelection import relief, sfs
+from FeatureSelection import relief, sfs
 from sklearn.mixture import GaussianMixture
 from scipy.linalg import svd
 from pandas import DataFrame
@@ -9,10 +9,42 @@ from sklearn import preprocessing
 from sklearn.tree import DecisionTreeClassifier
 from fancyimpute_.fancyimpute.knn import KNN
 
+def get_binary_features(df: DataFrame):
+    binary_features = []
+    for feature in df:
+        n = get_series_hist(df[feature])
+        if len(n) == 2:
+            binary_features.append(feature)
+    return binary_features
+
+
+def get_series_hist(series: pd.Series):
+    values = set()
+    for value in series:
+        if value is not np.nan:
+            values.add(value)
+    return values
+
+
+def convert_binary(df: DataFrame):
+    #pd.DataFrame.replace(data, 'Yes', 1, inplace=True)
+    #pd.DataFrame.replace(data, 'No', 0, inplace=True)
+    df['Will_vote_only_large_party'] = df['Will_vote_only_large_party'].map({'No': 0, 'Yes': 1, 'Maybe': 0.5})
+    df['Gender'] = df['Gender'].map({'Female': 0, 'Male': 1})
+    df['Married'] = df['Married'].map({'No': 0, 'Yes': 1})
+    df['Looking_at_poles_results'] = df['Looking_at_poles_results'].map({'No': 0, 'Yes': 1})
+    df['Voting_Time'] = df['Voting_Time'].map({'By_16:00': 0, 'After_16:00': 1})
+    df['Financial_agenda_matters'] = df['Financial_agenda_matters'].map({'No': 0, 'Yes': 1})
+    df['Age_group'] = df['Age_group'].map({'Below_30': 0, '30-45': 0.5, '45_and__up': 1})
+
+
+#bad sample is a sample with nan in a categorial values
 def count_bad_samples(df: DataFrame):
+    categorials = ['Main_transportation', 'Occupation', 'Most_Important_Issue']
     bad = 0
     for _, sample in df.iterrows():
-        if sample.count() != 38:
+        cat_values = set(sample[feature] for feature in categorials)
+        if np.nan in cat_values:
             bad += 1
     return bad
 
@@ -29,43 +61,22 @@ if __name__ == '__main__':
 
 
 
+    data_array = data_one_hot.to_numpy()
+    #u, s, vh = svd(data_array)
+    #chosen_features = relief(data_one_hot, data_array, 8, 3)
 
+    #gm = GaussianMixture()
+    #gm.fit(data_one_hot)
+    #data_one_hot_filled = gm.predict(data_one_hot)
+    data_featues_one_hot = data_filled.drop(columns='Vote')
+    data_featues_one_hot = pd.get_dummies(data_featues_one_hot)
+    data_featues_one_hot.insert(0, 'Vote', data_filled['Vote'])
+    data_featues_one_hot['Vote'] = data_featues_one_hot['Vote'].map({
+        'Khakis': 0, 'Oranges': 1, 'Purples': 2, 'Turquoises': 3, 'Yellows': 4, 'Blues': 5, 'Whites': 6,
+        'Greens': 7, 'Violets': 8, 'Browns': 9, 'Greys': 10, 'Pinks': 11, 'Reds': 12,
+    })
 
+    np_data = data_featues_one_hot.to_numpy()
+    clf = DecisionTreeClassifier()
+    chosen_features = sfs(clf, data_featues_one_hot, np_data[0:8000, :], np_data[8000:, :], 20)
 
-
-
-
-
-    #
-    # #pd.DataFrame.replace(data, 'Yes', 1, inplace=True)
-    # #pd.DataFrame.replace(data, 'No', 0, inplace=True)
-    # shape = data.shape
-    # #bad = count_bad_samples(data)
-    # data_filled = data.fillna(method='ffill')
-    # data_one_hot = pd.get_dummies(data_filled)
-    #
-    # data = pd.read_csv('ElectionsData.csv')
-    # data_array = data_one_hot.to_numpy()
-    # #u, s, vh = svd(data_array)
-    # #chosen_features = relief(data_one_hot, data_array, 8, 3)
-    #
-    # #gm = GaussianMixture()
-    # #gm.fit(data_one_hot)
-    # #data_one_hot_filled = gm.predict(data_one_hot)
-    # data_featues_one_hot = data_filled.drop(columns='Vote')
-    # data_featues_one_hot = pd.get_dummies(data_featues_one_hot)
-    # data_featues_one_hot.insert(0, 'Vote', data_filled['Vote'])
-    # data_featues_one_hot['Vote'] = data_featues_one_hot['Vote'].map({
-    #     'Khakis': 0, 'Oranges': 1, 'Purples': 2, 'Turquoises': 3, 'Yellows': 4, 'Blues': 5, 'Whites': 6,
-    #     'Greens': 7, 'Violets': 8, 'Browns': 9, 'Greys': 10, 'Pinks': 11, 'Reds': 12,
-    # })
-    #
-    # normelized_feature = data_featues_one_hot[1:]
-    #
-    # X_filled_knn = KNN(k=3).fit_transform(data_featues_one_hot)
-    # print(X_filled_knn)
-    #
-    # np_data = data_featues_one_hot.to_numpy()
-    # clf = DecisionTreeClassifier()
-    # # chosen_features = sfs(clf, data_featues_one_hot, np_data[0:8000, :], np_data[8000:, :], 20)
-    #
