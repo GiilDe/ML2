@@ -10,8 +10,7 @@ from sklearn.tree import DecisionTreeClassifier
 from fancyimpute_.fancyimpute.knn import KNN
 from TestPreformance import test_data_quality
 from sklearn.impute import SimpleImputer
-from sklearn.impute import IterativeImputer
-
+from imputations import DistirbutionImputator
 
 def remove_bad_samples(df: DataFrame):
     categorials = ['Main_transportation', 'Occupation', 'Most_Important_Issue']
@@ -103,16 +102,30 @@ if __name__ == '__main__':
     #
     # ___________________Simple_Imputer___________________#
 
-    imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+    # imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+    # train_data_X, train_data_Y, test_data_X, test_data_Y = split_data(all_data)
+    # scaler = preprocessing.StandardScaler().fit(train_data_X)
+    # scaled_train_data_X = pd.DataFrame(scaler.transform(train_data_X))
+    # imp.fit(scaled_train_data_X)
+    # imputed_scaled_train_data_X = imp.transform(scaled_train_data_X)
+    # imputed_scaled_test_data_X = imp.transform(pd.DataFrame(scaler.transform(test_data_X)))
+    # print(test_data_quality(imputed_scaled_train_data_X, train_data_Y, imputed_scaled_test_data_X, test_data_Y))
+
+    # ___________________Distribution_Imputer___________________#
     train_data_X, train_data_Y, test_data_X, test_data_Y = split_data(all_data)
-    scaler = preprocessing.StandardScaler().fit(train_data_X)
-    scaled_train_data_X = pd.DataFrame(scaler.transform(train_data_X))
-    imp.fit(scaled_train_data_X)
-    imputed_scaled_train_data_X = imp.transform(scaled_train_data_X)
-    imputed_scaled_test_data_X = imp.transform(pd.DataFrame(scaler.transform(test_data_X)))
+
+    train_data = train_data_X.copy()
+    train_data.insert(loc=0, column='Vote', value=train_data_Y)
+    imp = DistirbutionImputator()
+    imp.fit(train_data)
+    imputed_train_data_X = imp.fill_nans(train_data_X, data_is_with_label_column=False)
+    scaler = preprocessing.StandardScaler().fit(imputed_train_data_X)
+    imputed_scaled_train_data_X = pd.DataFrame(scaler.transform(imputed_train_data_X))
+    simple_imputer = SimpleImputer()
+    simple_imputer.fit(train_data_X)
+    imputed_scaled_test_data_X = scaler.transform(simple_imputer.transform(pd.DataFrame(test_data_X)))
     print(test_data_quality(imputed_scaled_train_data_X, train_data_Y, imputed_scaled_test_data_X, test_data_Y))
 
-    #
     # #pd.DataFrame.replace(data, 'Yes', 1, inplace=True)
     # #pd.DataFrame.replace(data, 'No', 0, inplace=True)
     # shape = data.shape

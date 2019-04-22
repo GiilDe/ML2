@@ -12,5 +12,5 @@ def test_data_quality(data_X, data_Y, test_X, test_Y):
                              voting='hard')
     eclf1.fit(data_X, data_Y)
     prediction = eclf1.predict(test_X)
-    print(prediction, test_Y)
+    # print(prediction, test_Y)
     return accuracy_score(test_Y, prediction)
