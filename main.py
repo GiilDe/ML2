@@ -31,8 +31,10 @@ def convert_binary(df: DataFrame):
     df['Looking_at_poles_results'] = df['Looking_at_poles_results'].map({'No': 0, 'Yes': 1})
     df['Voting_Time'] = df['Voting_Time'].map({'By_16:00': 0, 'After_16:00': 1})
     df['Financial_agenda_matters'] = df['Financial_agenda_matters'].map({'No': 0, 'Yes': 1})
-    df['Age_group'] = df['Age_group'].map({'Below_30': 0, '30-45': 0.5, '45_and__up': 1})
-
+    df['Age_group'] = df['Age_group'].map({'Below_30': 0, '30-45': 0.5, '45_and_up': 1})
+    binary_names = ['Will_vote_only_large_party', 'Gender', 'Married', 'Looking_at_poles_results', 'Voting_Time', 'Financial_agenda_matters', 'Age_group']
+    binary_indices = [df.columns.get_loc(name) for name in binary_names]
+    x = 5
 
 #bad sample is a sample with nan in a categorial values
 def count_bad_samples(df: DataFrame):
@@ -90,11 +92,10 @@ def normalize(feature_name, data: DataFrame):
 
 
 def scale(data: DataFrame, features_to_normalize, features_to_standartize):
-    names = data.columns.values
-    for i in features_to_normalize:
-        normalize(names[i], data)
-    for i in features_to_standartize:
-        standartize(names[i], data)
+    for s in features_to_normalize:
+        normalize(s, data)
+    for s in features_to_standartize:
+        standartize(s, data)
 
 
 def plot_features_hists(data: DataFrame):
@@ -131,17 +132,42 @@ def count(data: DataFrame, feature_name):
     plt.show()
 
 
+def plot_vote_to_features_colored(data: DataFrame):
+    names = data.columns.values
+    for i in range(1, 52):
+        sns.pairplot(data.iloc[:, [0, i]], hue='Vote')
+        name = 'Vote labeled to ' + str(names[i])
+        plt.title(name)
+        plt.show()
+        plt.savefig(name + '.png')
+
+
+def plot_vote_to_features(data: DataFrame):
+    names = data.columns.values
+    for i in range(1, 52):
+        for j in range(0, 12):
+            data_labeled = data[data.Vote == j]
+            sns.pairplot(data_labeled.iloc[:, [i]])
+            name = 'Vote labeled ' + str(j) + ' to ' + str(names[i])
+            plt.title(name)
+            plt.show()
+            plt.savefig(name + '.png')
+
+
 if __name__ == '__main__':
-    features_to_normalize = [1, 10, 11, 12, 13, 14, 16, 17, 25, 27, 28, 30, 33]
-    features_to_standartize = [2, 3, 4, 6, 15, 18, 19, 20, 22, 23, 24, 26, 29, 31, 32]
     data = pd.read_csv('ElectionsData.csv')
+    features_to_normalize = [1, 10, 11, 12, 13, 14, 16, 17, 25, 27, 30, 33]
+    features_to_standartize = [2, 3, 4, 6, 15, 18, 19, 20, 22, 23, 24, 26, 29, 31, 32]
     data_featues_one_hot = to_numerical_data(data)
     data = data_featues_one_hot.fillna(method='ffill')
-    scale(data, features_to_normalize, features_to_standartize)
+    normalize_names = [data.columns.values[i] for i in features_to_normalize]
+    standartize_names = [data.columns.values[i] for i in features_to_standartize]
+    scale(data, normalize_names, standartize_names)
     #plot_features_hists(data)
     #plot_scatters(data)
     #data.hist()
-    sns.pairplot(data[:50])
-    plt.show()
+    #plot_vote_to_features(data)
+    #data.to_csv("data.csv")
+    plot_vote_to_features_colored(data)
 
 
