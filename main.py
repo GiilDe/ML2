@@ -1,21 +1,22 @@
 import pandas as pd
 from FeatureSelection import relief, sfs
-from pandas import DataFrame
+from pandas import DataFrame, Series
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 import matplotlib.pyplot as plt
+from pandas.plotting import scatter_matrix
+import seaborn as sns
 
 
 def get_binary_features(df: DataFrame):
     binary_features = []
     for feature in df:
-        n = get_series_hist(df[feature])
-        if len(n) == 2:
+        if len(get_series_hist(df[feature])) == 2:
             binary_features.append(feature)
     return binary_features
 
 
-def get_series_hist(series: pd.Series):
+def get_series_hist(series: Series):
     values = set()
     for value in series:
         if value is not np.nan:
@@ -74,6 +75,28 @@ def chosen_features(data: DataFrame):
     return chosen_features
 
 
+def standartize(feature_name, data: DataFrame):
+    feature = data[feature_name]
+    mean = feature.mean()
+    std = feature.std()
+    data[feature_name] = (data[feature_name] - mean)/std
+
+
+def normalize(feature_name, data: DataFrame):
+    feature = data[feature_name]
+    max = feature.max()
+    min = feature.min()
+    data[feature_name] = (data[feature_name] - min)/(max - min)
+
+
+def scale(data: DataFrame, features_to_normalize, features_to_standartize):
+    names = data.columns.values
+    for i in features_to_normalize:
+        normalize(names[i], data)
+    for i in features_to_standartize:
+        standartize(names[i], data)
+
+
 def plot_features_hists(data: DataFrame):
     for i, column in enumerate(data):
         name = str(i) + ' ' + column
@@ -82,10 +105,43 @@ def plot_features_hists(data: DataFrame):
         plt.show()
 
 
+def plot_scatters(data: DataFrame):
+    for i, column in enumerate(data):
+        if i != 0:
+            name = str(i) + ' ' + 'vote and ' + column
+            plt.title(name)
+            plt.scatter(data[column], data['Vote'])
+            plt.show()
+
+
+def count(data: DataFrame, feature_name):
+    no = np.zeros(13)
+    yes = np.zeros(13)
+    for _, sample in data.iterrows():
+        n = int(sample['Vote'])
+        if sample[feature_name] == 0:
+            no[n] += 1
+        else:
+            yes[n] += 1
+
+    y = [0,1,2,3,4,5,6,7,8,9,10,11,12]
+    plt.scatter(no, y)
+    plt.scatter(yes, y)
+    plt.title(feature_name)
+    plt.show()
+
+
 if __name__ == '__main__':
+    features_to_normalize = [1, 10, 11, 12, 13, 14, 16, 17, 25, 27, 28, 30, 33]
+    features_to_standartize = [2, 3, 4, 6, 15, 18, 19, 20, 22, 23, 24, 26, 29, 31, 32]
     data = pd.read_csv('ElectionsData.csv')
     data_featues_one_hot = to_numerical_data(data)
     data = data_featues_one_hot.fillna(method='ffill')
-    #chosen_features = chosen_features(data)
-    plot_features_hists(data)
-#asf
+    scale(data, features_to_normalize, features_to_standartize)
+    #plot_features_hists(data)
+    #plot_scatters(data)
+    #data.hist()
+    sns.pairplot(data[:50])
+    plt.show()
+
+
