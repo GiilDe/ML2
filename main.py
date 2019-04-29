@@ -32,9 +32,8 @@ def convert_binary(df: DataFrame):
     df['Voting_Time'] = df['Voting_Time'].map({'By_16:00': 0, 'After_16:00': 1})
     df['Financial_agenda_matters'] = df['Financial_agenda_matters'].map({'No': 0, 'Yes': 1})
     df['Age_group'] = df['Age_group'].map({'Below_30': 0, '30-45': 0.5, '45_and_up': 1})
-    binary_names = ['Will_vote_only_large_party', 'Gender', 'Married', 'Looking_at_poles_results', 'Voting_Time', 'Financial_agenda_matters', 'Age_group']
-    binary_indices = [df.columns.get_loc(name) for name in binary_names]
-    x = 5
+    #binary_names = ['Will_vote_only_large_party', 'Gender', 'Married', 'Looking_at_poles_results', 'Voting_Time', 'Financial_agenda_matters', 'Age_group']
+
 
 #bad sample is a sample with nan in a categorial values
 def count_bad_samples(df: DataFrame):
