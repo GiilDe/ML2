@@ -71,8 +71,8 @@ def to_numerical_data(data: DataFrame):
 def chosen_features(data: DataFrame):
     np_data = data.to_numpy()
     clf = DecisionTreeClassifier()
-    sfs_chosen_features = sfs(clf, data_featues_one_hot, np_data[0:8000, :], np_data[8000:, :], 30)
-    relief_chosen_features = relief(data_featues_one_hot, np_data, threshold=0.3, times=3)
+    sfs_chosen_features = sfs(clf, data, np_data[0:8000, :], np_data[8000:, :], 30)
+    relief_chosen_features = relief(data, np_data, threshold=0.3, times=3)
     chosen_features = sfs_chosen_features.intersection(relief_chosen_features)
     return chosen_features
 
@@ -136,10 +136,10 @@ def plot_vote_to_features_colored(data: DataFrame):
     names = data.columns.values
     for i in range(1, 52):
         sns.pairplot(data.iloc[:, [0, i]], hue='Vote')
-        name = 'Vote labeled to ' + str(names[i])
+        name = 'Vote to ' + str(names[i])
         plt.title(name)
-        plt.show()
         plt.savefig(name + '.png')
+        #plt.show()
 
 
 def plot_vote_to_features(data: DataFrame):
@@ -154,20 +154,22 @@ def plot_vote_to_features(data: DataFrame):
             plt.savefig(name + '.png')
 
 
-if __name__ == '__main__':
-    data = pd.read_csv('ElectionsData.csv')
+def arrange_data(df: DataFrame):
     features_to_normalize = [1, 10, 11, 12, 13, 14, 16, 17, 25, 27, 30, 33]
     features_to_standartize = [2, 3, 4, 6, 15, 18, 19, 20, 22, 23, 24, 26, 29, 31, 32]
-    data_featues_one_hot = to_numerical_data(data)
+    data_featues_one_hot = to_numerical_data(df)
     data = data_featues_one_hot.fillna(method='ffill')
-    normalize_names = [data.columns.values[i] for i in features_to_normalize]
-    standartize_names = [data.columns.values[i] for i in features_to_standartize]
-    scale(data, normalize_names, standartize_names)
-    #plot_features_hists(data)
-    #plot_scatters(data)
-    #data.hist()
+    #normalize_names = [data.columns.values[i] for i in features_to_normalize]
+    #standartize_names = [data.columns.values[i] for i in features_to_standartize]
+    #scale(data, normalize_names, standartize_names)
+    return data
+
+
+if __name__ == '__main__':
+    data = pd.read_csv('ElectionsData.csv')
+    data = arrange_data(data)
+    #data['Vote'].hist()
+    #plt.show()
+    #plt.savefig('Vote hist.png')
     #plot_vote_to_features(data)
-    #data.to_csv("data.csv")
     plot_vote_to_features_colored(data)
-
-
