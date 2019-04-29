@@ -68,7 +68,19 @@ class DistirbutionImputator:
         print('not_found_counter: ', not_found_counter, 'mean_nan_counter: ', mean_nan_counter, 'std_nan_counter: ', std_nan_counter)
         return data
 
-
+def distribution_imputer_test(data):
+    train_data_X, train_data_Y, test_data_X, test_data_Y = split_data(data)
+    train_data = train_data_X.copy()
+    train_data.insert(loc=0, column='Vote', value=train_data_Y)
+    imp = DistirbutionImputator()
+    imp.fit(train_data)
+    imputed_train_data_X = imp.fill_nans(train_data_X, data_is_with_label_column=False)
+    scaler = preprocessing.StandardScaler().fit(imputed_train_data_X)
+    imputed_scaled_train_data_X = pd.DataFrame(scaler.transform(imputed_train_data_X))
+    simple_imputer = SimpleImputer()
+    simple_imputer.fit(train_data_X)
+    imputed_scaled_test_data_X = scaler.transform(simple_imputer.transform(pd.DataFrame(test_data_X)))
+    return test_data_quality(imputed_scaled_train_data_X, train_data_Y, imputed_scaled_test_data_X, test_data_Y)
 
 # all_data = pd.read_csv('ElectionsData.csv')
 # all_data = to_numerical_data(all_data)
