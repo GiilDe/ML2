@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
-# from main import to_numerical_data
-from sklearn import preprocessing
-import math
+from sklearn.impute import SimpleImputer
 
 
 class DistirbutionImputator:
@@ -22,30 +20,31 @@ class DistirbutionImputator:
         dividing_by_label.append(len(data))
         # print('dividing_by_label: ', dividing_by_label)
 
-        i = 0
+
         for column_index in range(1, len(data.columns)):
+            i = 0
             for j in dividing_by_label:
                 mean = data.iloc[i:j, column_index].mean()
                 std = data.iloc[i:j, column_index].std()
                 self.dict.update({(data.iloc[j-1, 0], column_index): (mean, std)})
                 i = j
-        print('self.dict:', self.dict)
-
+        # print('self.dict:', self.dict)
 
     def fill_nans(self, data, data_is_with_label_column = True):
         if data_is_with_label_column:
             add_to_column = 0
         else:
             add_to_column = 1
+        data = data.copy()
         nans_indeces = np.where(np.asanyarray(pd.isnull(data)))
-        print('There are ', len(nans_indeces[0]), ' nans')
+        # print('There are ', len(nans_indeces[0]), ' nans')
         mean_nan_counter = 0
         std_nan_counter = 0
         not_found_counter = 0
         for row, column in zip(nans_indeces[0], nans_indeces[1]):
             mean_std_tuple = self.dict.get((data.iloc[row, 0], column + add_to_column))
             # print('(', data.iloc[row, 0], ',', column + 1, ')', mean_std_tuple, ' for ', row, ', ', column)
-            assert math.isnan(data.iloc[row, column])
+            assert np.isnan(data.iloc[row, column])
             if mean_std_tuple is None:
                 not_found_counter += 1
                 mean = 0
@@ -53,34 +52,38 @@ class DistirbutionImputator:
             else:
                 mean = mean_std_tuple[0]
                 std = mean_std_tuple[1]
-            if math.isnan(mean):
+            if np.isnan(mean):
                 mean_nan_counter += 1
                 mean = 0
-            if math.isnan(std):
+            if np.isnan(std):
                 std_nan_counter += 1
                 std = 1
 
             data.iloc[row, column] = np.random.normal(mean, std)
-            assert not(math.isnan(data.iloc[row, column]))
+            assert not(np.isnan(data.iloc[row, column]))
             # print('_:_after_:_', data.iloc[row, column])
         nans_indeces = np.where(np.asanyarray(pd.isnull(data)))
-        print('There are ', len(nans_indeces[0]), ' nans')
-        print('not_found_counter: ', not_found_counter, 'mean_nan_counter: ', mean_nan_counter, 'std_nan_counter: ', std_nan_counter)
+        # print('There are ', len(nans_indeces[0]), ' nans')
+        # print('not_found_counter: ', not_found_counter, 'mean_nan_counter: ', mean_nan_counter, 'std_nan_counter: ', std_nan_counter)
         return data
 
-def distribution_imputer_test(data):
-    train_data_X, train_data_Y, test_data_X, test_data_Y = split_data(data)
-    train_data = train_data_X.copy()
-    train_data.insert(loc=0, column='Vote', value=train_data_Y)
+def impute_train_X(train_X, train_Y):
+    train_XY = train_X.copy()
+    train_XY.insert(loc=0, column='Vote', value=train_Y)
     imp = DistirbutionImputator()
-    imp.fit(train_data)
-    imputed_train_data_X = imp.fill_nans(train_data_X, data_is_with_label_column=False)
-    scaler = preprocessing.StandardScaler().fit(imputed_train_data_X)
-    imputed_scaled_train_data_X = pd.DataFrame(scaler.transform(imputed_train_data_X))
+    imp.fit(train_XY)
+    imputed_train_X = imp.fill_nans(train_XY, data_is_with_label_column=False)
+    return train_X
+
+
+def impute_test_and_validation(train_X, validation_X, test_X):
     simple_imputer = SimpleImputer()
-    simple_imputer.fit(train_data_X)
-    imputed_scaled_test_data_X = scaler.transform(simple_imputer.transform(pd.DataFrame(test_data_X)))
-    return test_data_quality(imputed_scaled_train_data_X, train_data_Y, imputed_scaled_test_data_X, test_data_Y)
+    simple_imputer.fit(train_X)
+    validation_X = simple_imputer.transform(validation_X)
+    test_X = simple_imputer.transform(test_X)
+    validation_X = pd.DataFrame(validation_X)
+    test_X = pd.DataFrame(test_X)
+    return validation_X, test_X
 
 # all_data = pd.read_csv('ElectionsData.csv')
 # all_data = to_numerical_data(all_data)

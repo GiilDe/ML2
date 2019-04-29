@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn import metrics
 from pandas import DataFrame
-
+from sklearn.feature_selection import SelectKBest
 
 def isNaN(v):
     return v != v
@@ -110,4 +110,3 @@ def sfs(model, df: DataFrame, train_data: np.ndarray, test_data: np.ndarray, fea
     names = df.columns.values
     chosen_features = [(index, names[index]) for index in added_features]
     return set(chosen_features)
-    #asfg
