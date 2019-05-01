@@ -166,9 +166,9 @@ def arrange_data(df: DataFrame):
 
 if __name__ == '__main__':
     data = pd.read_csv('ElectionsData.csv')
-    data = arrange_data(data)
+    #data = arrange_data(data)
     #data['Vote'].hist()
     #plt.show()
     #plt.savefig('Vote hist.png')
     #plot_vote_to_features(data)
-    plot_vote_to_features_colored(data)
+    #plot_vote_to_features_colored(data)
