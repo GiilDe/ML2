@@ -4,7 +4,7 @@ from imputations import impute_train_X, impute_test_and_validation
 from outliers_detection import clean_and_correct_train_X
 from TestPreformance import test_data_quality
 from FeatureSelection import manual_features_remove, sklearn_feature_selection_ranks, sfs, relief
-
+import pickle
 
 load = True
 
@@ -46,10 +46,11 @@ if __name__ == '__main__':
     test_Y = test_XY.iloc[:, 0]
     """feature selection"""
     select_K_best_features = sklearn_feature_selection_ranks(train_X, train_Y, 36)
-    print('select_K_best_features: ', select_K_best_features)
+    pickle.dump(select_K_best_features, open('select_K_best_features', 'w'))
+    print('select_36_best_features: ', select_K_best_features)
     select_K_best_train_X = train_X[select_K_best_features]
     select_K_best_test_X = test_X[select_K_best_features]
     select_K_best_train_XY = X_Y_2_XY(train_X, train_Y)
-    select_K_best_train_XY.to_csv('select_K_best_train_XY')
     print(test_data_quality(select_K_best_train_X, train_Y, select_K_best_test_X, test_Y))
     relief_features = relief(train_XY, 36, 100)
+    pickle.dump(relief_features, open('relief_36_features', 'w'))
