@@ -54,3 +54,4 @@ if __name__ == '__main__':
     print(test_data_quality(select_K_best_train_X, train_Y, select_K_best_test_X, test_Y))
     relief_features = relief(train_XY, 36, 100)
     pickle.dump(relief_features, open('relief_36_features', 'w'))
+    
