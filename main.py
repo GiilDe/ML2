@@ -45,13 +45,21 @@ if __name__ == '__main__':
     test_X = test_XY.iloc[:, 1:]
     test_Y = test_XY.iloc[:, 0]
     """feature selection"""
-    select_K_best_features = sklearn_feature_selection_ranks(train_X, train_Y, 36)
+    select_K_best_features = sklearn_feature_selection_ranks(train_X, validation_Y, 36)
     pickle.dump(select_K_best_features, open('select_K_best_features', 'w'))
     print('select_36_best_features: ', select_K_best_features)
     select_K_best_train_X = train_X[select_K_best_features]
-    select_K_best_test_X = test_X[select_K_best_features]
-    select_K_best_train_XY = X_Y_2_XY(train_X, train_Y)
-    print(test_data_quality(select_K_best_train_X, train_Y, select_K_best_test_X, test_Y))
+    select_K_best_validation_X = validation_X[select_K_best_features]
+    select_K_best_validation_XY = X_Y_2_XY(select_K_best_train_X, train_Y)
+    print(test_data_quality(select_K_best_train_X, train_Y, select_K_best_validation_X, validation_Y))
     relief_features = relief(train_XY, 36, 100)
     pickle.dump(relief_features, open('relief_36_features', 'w'))
-    
+    relief_features_train_X = train_X[relief_features]
+    relief_features_validation_X = validation_X[relief_features]
+    print(test_data_quality(relief_features_train_X, train_Y, relief_features_validation_X, validation_Y))
+    from sklearn.neighbors import KNeighborsClassifier
+    sfs_features = sfs(KNeighborsClassifier(n=3), train_XY, train_XY.to_numpy(), validation_XY.to_numpy(), 36)
+    pickle.dump(sfs_features, open('sfs_36_features', 'w'))
+    sfs_features_train_X = train_X[sfs_features]
+    sfs_features_validation_X = validation_X[sfs_features]
+    print(test_data_quality(sfs_features_train_X, train_Y, sfs_features_validation_X, validation_Y))
