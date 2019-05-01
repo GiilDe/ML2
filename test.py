@@ -40,6 +40,7 @@ data = pd.DataFrame(data=({'L': ['a','a','a','a','a','a','a','a','b','b','b','b'
                            'B': B_list,
                            'C': C_list}))
 
+
 data = data.sort_values(by='L')
 print(data)
 imp = DistirbutionImputator()

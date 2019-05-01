@@ -7,6 +7,23 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import StratifiedShuffleSplit
 import seaborn as sns
 
+
+def X_Y_2_XY(data_X: pd.DataFrame, data_Y: pd.DataFrame):
+    X_columns_list = data_X.columns.values
+    data_XY = data_X.copy()
+    data_Y = pd.DataFrame(data_Y.copy())
+    data_Y = data_Y.set_index(data_X.index)
+    data_XY = data_XY.assign(Vote=data_Y)
+    new_columns_list = ['Vote']
+    new_columns_list.extend(X_columns_list)
+    data_XY = data_XY[new_columns_list]
+    return data_XY
+
+
+def XY_2_X_Y(data_XY):
+    return data_XY.iloc[:, 1:], data_XY.iloc[:, 0]
+
+
 def split_data(all_data):
     sss = StratifiedShuffleSplit(n_splits=1, test_size=0.25, random_state=0)
     train_index, test_valid_index = next(sss.split(all_data.iloc[:, 1:], all_data.iloc[:, 0]))
@@ -105,10 +122,10 @@ class Scaler:
         for column_index in (self.features_to_normalize + self.features_to_standartize):
             description = train_XY.iloc[:, column_index].describe()
             if column_index in self.features_to_normalize:
-                self.dict.update({column_index: (description.mean, description.std)})
+                self.dict.update({column_index: (description.mean(), description.std())})
             else:
                 assert column_index in self.features_to_standartize
-                self.dict.update({column_index: (description.max, description.min)})
+                self.dict.update({column_index: (description.max(), description.min())})
 
     def scale(self, data: DataFrame):
         for column_index in self.features_to_normalize:
@@ -192,15 +209,15 @@ def plot_vote_to_features(data: DataFrame):
             plt.savefig(name + '.png')
 
 
-def arrange_data(df: DataFrame):
-    features_to_normalize = [1, 10, 11, 12, 13, 14, 16, 17, 25, 27, 30, 33]
-    features_to_standartize = [2, 3, 4, 6, 15, 18, 19, 20, 22, 23, 24, 26, 29, 31, 32]
-    data_featues_one_hot = to_numerical_data(df)
-    data = data_featues_one_hot.fillna(method='ffill')
-    normalize_names = [data.columns.values[i] for i in features_to_normalize]
-    standartize_names = [data.columns.values[i] for i in features_to_standartize]
-    scale(data, normalize_names, standartize_names)
-    return data
+# def arrange_data(df: DataFrame):
+#     features_to_normalize = [1, 10, 11, 12, 13, 14, 16, 17, 25, 27, 30, 33]
+#     features_to_standartize = [2, 3, 4, 6, 15, 18, 19, 20, 22, 23, 24, 26, 29, 31, 32]
+#     data_featues_one_hot = to_numerical_data(df)
+#     data = data_featues_one_hot.fillna(method='ffill')
+#     normalize_names = [data.columns.values[i] for i in features_to_normalize]
+#     standartize_names = [data.columns.values[i] for i in features_to_standartize]
+#     scale(data, normalize_names, standartize_names)
+#     return data
 
 
 def scale_all(train_XY, validation_XY, test_XY):

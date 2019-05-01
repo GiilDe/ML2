@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.impute import SimpleImputer
-
+from data_handling import X_Y_2_XY
 
 class DistirbutionImputator:
     def __init__(self):
@@ -67,23 +67,26 @@ class DistirbutionImputator:
         # print('not_found_counter: ', not_found_counter, 'mean_nan_counter: ', mean_nan_counter, 'std_nan_counter: ', std_nan_counter)
         return data
 
-def impute_train_X(train_X, train_Y):
-    train_XY = train_X.copy()
-    train_XY.insert(loc=0, column='Vote', value=train_Y)
+
+def impute_train_X(train_XY):
     imp = DistirbutionImputator()
     imp.fit(train_XY)
-    imputed_train_X = imp.fill_nans(train_XY, data_is_with_label_column=False)
-    return train_X
+    imputed_train_XY = imp.fill_nans(train_XY, data_is_with_label_column=True)
+    return imputed_train_XY
 
 
-def impute_test_and_validation(train_X, validation_X, test_X):
+def impute_test_and_validation(train_XY, validation_XY, test_XY):
+    validation_columns = validation_XY.columns
+    test_columns = train_XY.columns
     simple_imputer = SimpleImputer()
-    simple_imputer.fit(train_X)
-    validation_X = simple_imputer.transform(validation_X)
-    test_X = simple_imputer.transform(test_X)
-    validation_X = pd.DataFrame(validation_X)
-    test_X = pd.DataFrame(test_X)
-    return validation_X, test_X
+    simple_imputer.fit(train_XY)
+    validation_XY = pd.DataFrame(simple_imputer.transform(validation_XY))
+    test_XY = pd.DataFrame(simple_imputer.transform(test_XY))
+    validation_XY.columns = validation_columns
+    test_XY.columns = test_columns
+    assert not validation_XY.isnull().any().any()
+    assert not test_XY.isnull().any().any()
+    return validation_XY, test_XY
 
 # all_data = pd.read_csv('ElectionsData.csv')
 # all_data = to_numerical_data(all_data)

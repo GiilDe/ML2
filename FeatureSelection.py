@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn import metrics
 from pandas import DataFrame
-from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import SelectKBest, f_classif
 
 def isNaN(v):
     return v != v
@@ -34,10 +34,22 @@ def euclidean_dist(u, v):
     return dist
 
 
-def relief(df: pd.DataFrame, S: np.ndarray, threshold, times):
+def sklearn_feature_selection_ranks(data_X, data_Y, k):
+    feature_selector = SelectKBest(f_classif, k)
+    feature_selector.fit(data_X, data_Y)
+    feature_names = data_X.columns.values
+    mask = feature_selector.get_support()
+    new_feature_names = []
+    for bool, feature in zip(mask, feature_names):
+        if bool:
+            new_feature_names.append(feature)
+    return new_feature_names
+
+
+def relief(df: pd.DataFrame, k, times):
+    S = df.to_numpy()
     m = S.shape[0]  #num of samples
     n = S.shape[1]  #num of features
-
     weights = np.zeros(n)
     for _ in range(times):
         instance_index = np.random.randint(0, m)
@@ -54,8 +66,10 @@ def relief(df: pd.DataFrame, S: np.ndarray, threshold, times):
             weights[j] += (minus(chosen[j], closest_different[j]))**2 - (minus(chosen[j], closest_same[j]))**2
 
     features = df.columns.values
-    chosen_features = [(index, features[index]) for index in range(n) if weights[index] > threshold]
-    return set(chosen_features)
+    chosen_features = [(weights[index], features[index]) for index in range(n)]
+    chosen_features.sort(key=lambda x: x[0], reverse=True)
+
+    return chosen_features[:k]
 
 
 def sfs(model, df: DataFrame, train_data: np.ndarray, test_data: np.ndarray, feature_num: int):
@@ -110,3 +124,9 @@ def sfs(model, df: DataFrame, train_data: np.ndarray, test_data: np.ndarray, fea
     names = df.columns.values
     chosen_features = [(index, names[index]) for index in added_features]
     return set(chosen_features)
+
+
+def manual_features_remove(data: pd.DataFrame):
+    data = data.copy()
+    data.drop(columns=['Avg_monthly_expense_on_pets_or_plants'])
+    return data
